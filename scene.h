@@ -9,9 +9,14 @@ class Scene {
 private:
     Camera camera;
     std::vector<std::shared_ptr<Shape>> shapes;
+    std::vector<unsigned char> frameBuffer;
+    unsigned int textureId;
+    int width;
+    int height;
 
 public:
-    Scene(const Camera& cam = Camera()) : camera(cam) {}
+    Scene(const Camera& cam = Camera());
+    ~Scene();
 
     void addShape(std::shared_ptr<Shape> shape) {
         shapes.push_back(shape);
@@ -21,9 +26,17 @@ public:
         camera = cam;
     }
 
+    Camera& getCamera() { return camera; }
+
     // Finds the closest intersection with any shape for a given ray
     Intersection findClosestIntersection(const Ray& ray) const;
 
-    // Renders the scene and saves it to a PNG file
-    void render(const char* filename, int width, int height);
+    // Renders the scene to the framebuffer
+    void render(int width, int height);
+    
+    // Updates the OpenGL texture with the current framebuffer
+    void updateTexture();
+
+    // Initializes OpenGL resources
+    void initializeGL(int width, int height);
 }; 
