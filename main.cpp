@@ -4,17 +4,28 @@
 #include <memory>
 #include <iostream>
 
-void processInput(GLFWwindow* window, Camera& camera, float deltaTime) {
+bool processInput(GLFWwindow* window, Camera& camera, float deltaTime) {
+    bool cameraMoved = false;
     const float cameraSpeed = 2.5f * deltaTime;
     
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         camera.move(camera.getDirection() * cameraSpeed);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        cameraMoved = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
         camera.move(-camera.getDirection() * cameraSpeed);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        cameraMoved = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
         camera.move(-glm::normalize(glm::cross(camera.getDirection(), glm::vec3(0, 1, 0))) * cameraSpeed);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        cameraMoved = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
         camera.move(glm::normalize(glm::cross(camera.getDirection(), glm::vec3(0, 1, 0))) * cameraSpeed);
+        cameraMoved = true;
+    }
+    
+    return cameraMoved;
 }
 
 int main() {
@@ -51,20 +62,54 @@ int main() {
     scene.initializeGL(width, height);
 
     float lastFrame = 0.0f;
+    bool needsRender = true;  // Initial render is needed
+    
+    // Add FPS counter variables
+    float fpsUpdateInterval = 0.5f;  // Update FPS display every 0.5 seconds
+    float lastFpsUpdate = 0.0f;
+    int frameCount = 0;
+    float currentFps = 0.0f;
 
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = glfwGetTime();
         float deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        processInput(window, scene.getCamera(), deltaTime);
+        // Store old camera position and direction
+        glm::vec3 oldPos = scene.getCamera().getPosition();
+        glm::vec3 oldDir = scene.getCamera().getDirection();
 
-        // Render scene
-        scene.render(width, height);
+        // Process input
+        bool cameraMoved = processInput(window, scene.getCamera(), deltaTime);
+
+        // Check if camera moved
+        if (oldPos != scene.getCamera().getPosition() || 
+            oldDir != scene.getCamera().getDirection()) {
+            needsRender = true;
+        }
+
+        // Only render if needed
+        if (needsRender) {
+            scene.render(width, height);
+            needsRender = false;
+        }
+
+        // Always update the display
         scene.updateTexture();
-
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        // Update FPS counter
+        frameCount++;
+        if (currentFrame - lastFpsUpdate >= fpsUpdateInterval) {
+            currentFps = frameCount / (currentFrame - lastFpsUpdate);
+            frameCount = 0;
+            lastFpsUpdate = currentFrame;
+            
+            // Update window title
+            std::string title = "Ray Tracer (" + std::to_string(static_cast<int>(currentFps)) + " fps)";
+            glfwSetWindowTitle(window, title.c_str());
+        }
     }
 
     glfwTerminate();
