@@ -11,25 +11,34 @@ public:
         , radius(r)
     {}
 
-    Intersection intersect(const Ray& ray) const override {
-        glm::vec3 oc = ray.getOrigin() - position;
-        float a = glm::dot(ray.getDirection(), ray.getDirection());
-        float b = 2.0f * glm::dot(oc, ray.getDirection());
+    Intersection intersect(const Ray& worldRay) const override {
+        // Transform ray to object space
+        Ray objectRay = transformRayToObjectSpace(worldRay);
+        
+        // Perform intersection in object space
+        glm::vec3 oc = objectRay.getOrigin();  // In object space, center is at origin
+        float a = glm::dot(objectRay.getDirection(), objectRay.getDirection());
+        float b = 2.0f * glm::dot(oc, objectRay.getDirection());
         float c = glm::dot(oc, oc) - radius * radius;
         float discriminant = b*b - 4*a*c;
 
         if (discriminant < 0) {
-            return Intersection(); // No hit
+            return Intersection();
         }
 
         float dist = (-b - sqrt(discriminant)) / (2.0f*a);
         if (dist < 0) {
             dist = (-b + sqrt(discriminant)) / (2.0f*a);
             if (dist < 0) {
-                return Intersection(); // No hit
+                return Intersection();
             }
         }
 
-        return Intersection(dist, color);
+        // Transform intersection point back to world space
+        glm::vec3 objectHitPoint = objectRay.at(dist);
+        glm::vec3 worldHitPoint = Transform::transformPoint(objectHitPoint, transform.modelMatrix);
+        float worldDist = glm::length(worldHitPoint - worldRay.getOrigin());
+
+        return Intersection(worldDist, color);
     }
 };

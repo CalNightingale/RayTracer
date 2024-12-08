@@ -2,22 +2,38 @@
 #include <glm/glm.hpp>
 #include "../ray.h"
 #include "../intersection.h"
+#include "../transforms.h"
 
 class Shape {
 protected:
-    glm::vec3 position;
+    Transform transform;
     glm::vec3 color;
 
 public:
     Shape(const glm::vec3& pos, const glm::vec3& col) 
-        : position(pos)
-        , color(col)
-    {}
+        : color(col)
+    {
+        transform.modelMatrix = glm::translate(glm::mat4(1.0f), pos);
+    }
+    
     virtual ~Shape() = default;
 
-    // Returns distance to intersection point, or -1 if no intersection
-    virtual Intersection intersect(const Ray& ray) const = 0;
+    // Returns intersection in world space
+    virtual Intersection intersect(const Ray& worldRay) const = 0;
     
-    glm::vec3 getPosition() const { return position; }
-    glm::vec3 getColor() const { return color; }
+    // Transform ray from world space to object space
+    Ray transformRayToObjectSpace(const Ray& worldRay) const {
+        glm::mat4 worldToObject = glm::inverse(transform.modelMatrix);
+        glm::vec3 origin = Transform::transformPoint(worldRay.getOrigin(), worldToObject);
+        glm::vec3 direction = Transform::transformDirection(worldRay.getDirection(), worldToObject);
+        return Ray(origin, direction);
+    }
+
+    void setModelMatrix(const glm::mat4& matrix) {
+        transform.modelMatrix = matrix;
+    }
+
+    glm::mat4 getModelMatrix() const {
+        return transform.modelMatrix;
+    }
 }; 

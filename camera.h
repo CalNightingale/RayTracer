@@ -2,16 +2,18 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "ray.h"
+#include "transforms.h"
 
 class Camera {
 private:
-    glm::vec3 position;      // Camera position in 3D space
-    glm::vec3 direction;     // View direction
-    float fieldOfView;       // Field of view in degrees
-    float aspectRatio;       // Aspect ratio
+    Transform transform;
+    float fieldOfView;
+    float aspectRatio;
+    glm::vec3 position;
+    glm::vec3 direction;
 
 public:
-    Camera(const glm::vec3& pos = glm::vec3(0.0f, 0.0f, 0.0f),
+    Camera(const glm::vec3& pos = glm::vec3(0.0f),
            const glm::vec3& dir = glm::vec3(0.0f, 0.0f, -1.0f),
            float fov = 45.0f,
            float aspect = 16.0f/9.0f);
@@ -29,6 +31,10 @@ public:
     // Movement and orientation
     void move(const glm::vec3& offset);
     void lookAt(const glm::vec3& target);
+
+    // Matrix updates
+    void updateViewMatrix();
+    void updateProjectionMatrix();
 
     // Ray generation
     Ray getRay(float x, float y) const;

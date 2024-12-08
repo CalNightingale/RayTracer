@@ -1,5 +1,6 @@
 #include "scene.h"
 #include "shapes/sphere.h"
+#include "shapes/cuboid.h"
 #include <GLFW/glfw3.h>
 #include <memory>
 #include <iostream>
@@ -57,6 +58,14 @@ int main() {
         glm::vec3(1, 0, 0)     // color (red)
     );
     scene.addShape(sphere);
+
+    // Add a floor (wide cuboid)
+    auto floor = std::make_shared<Cuboid>(
+        glm::vec3(0, -1.5f, 0),     // position (centered below the sphere)
+        glm::vec3(10, 0.1f, 10),    // dimensions (wide, thin, deep)
+        glm::vec3(0.5f, 0.5f, 0.5f) // color (medium gray)
+    );
+    scene.addShape(floor);
 
     // Initialize OpenGL resources
     scene.initializeGL(width, height);
