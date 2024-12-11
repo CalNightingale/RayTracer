@@ -67,6 +67,14 @@ int main() {
     );
     scene.addShape(floor);
 
+    // Add a light
+    auto light = std::make_shared<Light>(
+        glm::vec3(2, 4, 3),     // position
+        glm::vec3(1, 1, 1),     // color (white)
+        1.0f                     // intensity
+    );
+    scene.addLight(light);
+
     // Initialize OpenGL resources
     scene.initializeGL(width, height);
 

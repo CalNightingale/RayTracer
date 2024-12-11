@@ -51,8 +51,14 @@ void Scene::render(int width, int height) {
             // Find closest intersection
             Intersection intersection = findClosestIntersection(ray);
 
-            // Calculate pixel color
-            glm::vec3 color = intersection.hit ? intersection.color : glm::vec3(0.0f);
+            glm::vec3 color(0.0f);
+            if (intersection.hit) {
+                color = calculateLighting(
+                    ray.at(intersection.distance),  // intersection point
+                    intersection.normal,            // surface normal
+                    intersection.color              // base color
+                );
+            }
 
             // Convert color to unsigned char (0-255 range)
             int pixel_index = (y * width + x) * 3;
@@ -96,4 +102,20 @@ Intersection Scene::findClosestIntersection(const Ray& ray) const {
     }
 
     return closest;
+}
+
+glm::vec3 Scene::calculateLighting(const glm::vec3& point, const glm::vec3& normal, const glm::vec3& baseColor) const {
+    glm::vec3 totalLight(0.0f);
+    
+    // Add ambient light
+    float ambientStrength = 0.1f;
+    totalLight += ambientStrength * baseColor;
+
+    // Add contribution from each light
+    for (const auto& light : lights) {
+        totalLight += light->calculateLightingAt(point, normal) * baseColor;
+    }
+
+    // Clamp values to [0,1]
+    return glm::clamp(totalLight, 0.0f, 1.0f);
 }

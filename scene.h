@@ -3,12 +3,14 @@
 #include <memory>
 #include "camera.h"
 #include "shapes/shape.h"
+#include "lights/light.h"
 #include "utils/utils.h"
 
 class Scene {
 private:
     Camera camera;
     std::vector<std::shared_ptr<Shape>> shapes;
+    std::vector<std::shared_ptr<Light>> lights;
     std::vector<unsigned char> frameBuffer;
     unsigned int textureId;
     int width;
@@ -20,6 +22,10 @@ public:
 
     void addShape(std::shared_ptr<Shape> shape) {
         shapes.push_back(shape);
+    }
+
+    void addLight(std::shared_ptr<Light> light) {
+        lights.push_back(light);
     }
 
     void setCamera(const Camera& cam) {
@@ -39,4 +45,7 @@ public:
 
     // Initializes OpenGL resources
     void initializeGL(int width, int height);
+
+    // Calculate total lighting at a point
+    glm::vec3 calculateLighting(const glm::vec3& point, const glm::vec3& normal, const glm::vec3& baseColor) const;
 }; 

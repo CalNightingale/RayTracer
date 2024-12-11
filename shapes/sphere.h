@@ -36,9 +36,13 @@ public:
 
         // Transform intersection point back to world space
         glm::vec3 objectHitPoint = objectRay.at(dist);
+        glm::vec3 objectNormal = glm::normalize(objectHitPoint);  // For sphere, normal is just normalized position
+        
+        // Transform normal to world space
         glm::vec3 worldHitPoint = Transform::transformPoint(objectHitPoint, transform.modelMatrix);
+        glm::vec3 worldNormal = glm::normalize(Transform::transformDirection(objectNormal, transform.modelMatrix));
+        
         float worldDist = glm::length(worldHitPoint - worldRay.getOrigin());
-
-        return Intersection(worldDist, color);
+        return Intersection(worldDist, color, worldNormal);
     }
 };
