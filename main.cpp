@@ -61,64 +61,32 @@ int main() {
 
     // Add a floor (wide cuboid)
     auto floor = std::make_shared<Cuboid>(
-        glm::vec3(0, -1.5f, 0),     // position (centered below the sphere)
-        glm::vec3(10, 0.1f, 10),    // dimensions (wide, thin, deep)
-        glm::vec3(0.5f, 0.5f, 0.5f) // color (medium gray)
+        glm::vec3(0, -1.5f, 0),     // position
+        glm::vec3(10, 0.1f, 10),    // dimensions
+        glm::vec3(0.5f, 0.5f, 0.5f) // color
     );
     scene.addShape(floor);
 
     // Initialize OpenGL resources
     scene.initializeGL(width, height);
 
+    // Render once
+    scene.render(width, height);
+
     float lastFrame = 0.0f;
-    bool needsRender = true;  // Initial render is needed
-    
-    // Add FPS counter variables
-    float fpsUpdateInterval = 0.5f;  // Update FPS display every 0.5 seconds
-    float lastFpsUpdate = 0.0f;
-    int frameCount = 0;
-    float currentFps = 0.0f;
 
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = glfwGetTime();
         float deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        // Store old camera position and direction
-        glm::vec3 oldPos = scene.getCamera().getPosition();
-        glm::vec3 oldDir = scene.getCamera().getDirection();
-
         // Process input
-        bool cameraMoved = processInput(window, scene.getCamera(), deltaTime);
+        processInput(window, scene.getCamera(), deltaTime);
 
-        // Check if camera moved
-        if (oldPos != scene.getCamera().getPosition() || 
-            oldDir != scene.getCamera().getDirection()) {
-            needsRender = true;
-        }
-
-        // Only render if needed
-        if (needsRender) {
-            scene.render(width, height);
-            needsRender = false;
-        }
-
-        // Always update the display
+        // Update display
         scene.updateTexture();
         glfwSwapBuffers(window);
         glfwPollEvents();
-
-        // Update FPS counter
-        frameCount++;
-        if (currentFrame - lastFpsUpdate >= fpsUpdateInterval) {
-            currentFps = frameCount / (currentFrame - lastFpsUpdate);
-            frameCount = 0;
-            lastFpsUpdate = currentFrame;
-            
-            // Update window title
-            std::string title = "Ray Tracer (" + std::to_string(static_cast<int>(currentFps)) + " fps)";
-            glfwSetWindowTitle(window, title.c_str());
-        }
     }
 
     glfwTerminate();
