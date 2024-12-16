@@ -6,8 +6,8 @@ private:
     float radius;
 
 public:
-    Sphere(const glm::vec3& pos, float r, const glm::vec3& col)
-        : Shape(pos, col)
+    Sphere(const glm::vec3& pos, float r, const Material& mat)
+        : Shape(pos, mat)
         , radius(r)
     {}
 
@@ -43,6 +43,6 @@ public:
         glm::vec3 worldNormal = glm::normalize(Transform::transformDirection(objectNormal, transform.modelMatrix));
         
         float worldDist = glm::length(worldHitPoint - worldRay.getOrigin());
-        return Intersection(worldDist, color, worldNormal);
+        return Intersection(worldDist, material, worldNormal);
     }
 };
