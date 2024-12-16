@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include "utils/material.h"
 
 struct Intersection {
     bool hit;           // Whether there was an intersection

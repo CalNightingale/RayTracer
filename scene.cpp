@@ -56,7 +56,7 @@ void Scene::render(int width, int height) {
                 color = calculateLighting(
                     ray.at(intersection.distance),  // intersection point
                     intersection.normal,            // surface normal
-                    intersection.color              // base color
+                    intersection.material              // base color
                 );
             }
 
@@ -104,16 +104,30 @@ Intersection Scene::findClosestIntersection(const Ray& ray) const {
     return closest;
 }
 
-glm::vec3 Scene::calculateLighting(const glm::vec3& point, const glm::vec3& normal, const glm::vec3& baseColor) const {
+glm::vec3 Scene::calculateLighting(const glm::vec3& point, const glm::vec3& normal, const Material& material) const {
     glm::vec3 totalLight(0.0f);
     
     // Add ambient light
-    float ambientStrength = 0.1f;
-    totalLight += ambientStrength * baseColor;
+    totalLight += material.ambient * material.color;
 
     // Add contribution from each light
     for (const auto& light : lights) {
-        totalLight += light->calculateLightingAt(point, normal) * baseColor;
+        glm::vec3 lightDir = glm::normalize(light->getPosition() - point);
+        
+        // Calculate diffuse lighting
+        float diff = glm::max(glm::dot(normal, lightDir), 0.0f);
+        glm::vec3 diffuse = material.diffuse * diff * material.color;
+        
+        // Calculate specular lighting
+        glm::vec3 viewDir = glm::normalize(camera.getPosition() - point);
+        glm::vec3 reflectDir = glm::reflect(-lightDir, normal);
+        float spec = pow(glm::max(glm::dot(viewDir, reflectDir), 0.0f), material.shininess);
+        glm::vec3 specular = material.specular * spec * light->getColor();
+        
+        // Add light contribution with attenuation
+        float distance = glm::length(light->getPosition() - point);
+        float attenuation = 1.0f / (distance * distance);
+        totalLight += (diffuse + specular) * light->getIntensity() * attenuation;
     }
 
     // Clamp values to [0,1]

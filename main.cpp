@@ -51,19 +51,35 @@ int main() {
     Camera camera(glm::vec3(0, 0, 5), glm::vec3(0, 0, -1));
     Scene scene(camera);
 
-    // Add a sphere
+    // Create a material for the sphere
+    Material sphereMaterial;
+    sphereMaterial.color = glm::vec3(1, 0, 0);  // red
+    sphereMaterial.ambient = 0.1f;
+    sphereMaterial.diffuse = 0.7f;
+    sphereMaterial.specular = 0.3f;
+    sphereMaterial.shininess = 32.0f;
+
+    // Create the sphere with material
     auto sphere = std::make_shared<Sphere>(
         glm::vec3(0, 0, 0),    // position
         1.0f,                  // radius
-        glm::vec3(1, 0, 0)     // color (red)
+        sphereMaterial         // material
     );
     scene.addShape(sphere);
 
-    // Add a floor (wide cuboid)
+    // Create a material for the floor
+    Material floorMaterial;
+    floorMaterial.color = glm::vec3(0.5f, 0.5f, 0.5f);  // gray
+    floorMaterial.ambient = 0.1f;
+    floorMaterial.diffuse = 0.7f;
+    floorMaterial.specular = 0.2f;
+    floorMaterial.shininess = 16.0f;
+
+    // Create the floor with material
     auto floor = std::make_shared<Cuboid>(
         glm::vec3(0, -1.5f, 0),     // position
         glm::vec3(10, 0.1f, 10),    // dimensions
-        glm::vec3(0.5f, 0.5f, 0.5f) // color
+        floorMaterial               // material
     );
     scene.addShape(floor);
 

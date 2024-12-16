@@ -7,8 +7,8 @@ private:
     glm::vec3 dimensions;  // width, height, depth
 
 public:
-    Cuboid(const glm::vec3& pos, const glm::vec3& dims, const glm::vec3& col)
-        : Shape(pos, col)
+    Cuboid(const glm::vec3& pos, const glm::vec3& dims, const Material& mat)
+        : Shape(pos, mat)
         , dimensions(dims)
     {
         // Scale the model matrix by the dimensions
@@ -63,7 +63,7 @@ public:
         glm::vec3 worldNormal = glm::normalize(Transform::transformDirection(objectNormal, transform.modelMatrix));
         
         float worldDist = glm::length(worldHitPoint - worldRay.getOrigin());
-        return Intersection(worldDist, color, worldNormal);
+        return Intersection(worldDist, material, worldNormal);
     }
 
     glm::vec3 getDimensions() const { return dimensions; }

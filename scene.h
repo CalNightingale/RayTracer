@@ -47,5 +47,5 @@ public:
     void initializeGL(int width, int height);
 
     // Calculate total lighting at a point
-    glm::vec3 calculateLighting(const glm::vec3& point, const glm::vec3& normal, const glm::vec3& baseColor) const;
+    glm::vec3 calculateLighting(const glm::vec3& point, const glm::vec3& normal, const Material& material) const;
 }; 
