@@ -7,4 +7,5 @@ struct Material {
     float diffuse;
     float specular;
     float shininess;
+    float reflectiveness; // 0 = no reflection, 1 = perfect reflection
 };

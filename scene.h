@@ -15,6 +15,10 @@ private:
     unsigned int textureId;
     int width;
     int height;
+    static const int MAX_REFLECTION_DEPTH = 3;
+    
+    // New private method for recursive ray color calculation
+    glm::vec3 traceRay(const Ray& ray, int depth) const;
 
 public:
     Scene(const Camera& cam = Camera());

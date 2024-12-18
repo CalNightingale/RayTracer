@@ -48,7 +48,10 @@ int main() {
     glfwMakeContextCurrent(window);
 
     // Create camera and scene
-    Camera camera(glm::vec3(0, 0, 5), glm::vec3(0, 0, -1));
+    Camera camera(
+        glm::vec3(0, 4, 10),     // Position: higher up and further back
+        glm::vec3(0, -0.3f, -1)  // Direction: looking slightly downward
+    );
     Scene scene(camera);
 
     // Create a material for the sphere
@@ -58,6 +61,7 @@ int main() {
     sphereMaterial.diffuse = 0.7f;
     sphereMaterial.specular = 0.3f;
     sphereMaterial.shininess = 32.0f;
+    sphereMaterial.reflectiveness = 0.0f;
 
     // Create the sphere with material
     auto sphere = std::make_shared<Sphere>(
@@ -68,12 +72,14 @@ int main() {
     scene.addShape(sphere);
 
     // Create a material for the floor
+    // TODO: Fix these contructors. Why we set it like this?
     Material floorMaterial;
     floorMaterial.color = glm::vec3(0.5f, 0.5f, 0.5f);  // gray
     floorMaterial.ambient = 0.1f;
     floorMaterial.diffuse = 0.7f;
     floorMaterial.specular = 0.2f;
     floorMaterial.shininess = 16.0f;
+    floorMaterial.reflectiveness = 0.0f;
 
     // Create the floor with material
     auto floor = std::make_shared<Cuboid>(
@@ -82,6 +88,23 @@ int main() {
         floorMaterial               // material
     );
     scene.addShape(floor);
+
+    // Create a material for the back wall (mirror)
+    Material mirrorMaterial;
+    mirrorMaterial.color = glm::vec3(1.0f);  // white
+    mirrorMaterial.ambient = 0.1f;
+    mirrorMaterial.diffuse = 0.1f;
+    mirrorMaterial.specular = 0.8f;
+    mirrorMaterial.shininess = 64.0f;
+    mirrorMaterial.reflectiveness = 1.0f;  // Perfect mirror
+
+    // Create the back wall
+    auto backWall = std::make_shared<Cuboid>(
+        glm::vec3(0, 0, -5),       // position
+        glm::vec3(10, 10, 0.1f),   // dimensions
+        mirrorMaterial             // material
+    );
+    scene.addShape(backWall);
 
     // Add a light
     auto light = std::make_shared<Light>(
