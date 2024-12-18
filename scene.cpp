@@ -116,17 +116,19 @@ glm::vec3 Scene::calculateLighting(const glm::vec3& point, const glm::vec3& norm
         
         // Calculate diffuse lighting
         float diff = glm::max(glm::dot(normal, lightDir), 0.0f);
-        glm::vec3 diffuse = material.diffuse * diff * material.color;
+        glm::vec3 diffuse = material.diffuse * diff * material.color * light->getColor();
         
         // Calculate specular lighting
         glm::vec3 viewDir = glm::normalize(camera.getPosition() - point);
         glm::vec3 reflectDir = glm::reflect(-lightDir, normal);
         float spec = pow(glm::max(glm::dot(viewDir, reflectDir), 0.0f), material.shininess);
-        glm::vec3 specular = material.specular * spec * light->getColor();
+        glm::vec3 specular = material.specular * spec * light->getColor() * material.color;
         
         // Add light contribution with attenuation
         float distance = glm::length(light->getPosition() - point);
-        float attenuation = 1.0f / (distance * distance);
+        // TODO research attenuation formula
+        float attenuation = 1.0f / (1.0f + 0.09f * distance + 0.032f * distance * distance);
+        
         totalLight += (diffuse + specular) * light->getIntensity() * attenuation;
     }
 
