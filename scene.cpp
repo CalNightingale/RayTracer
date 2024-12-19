@@ -94,29 +94,35 @@ Intersection Scene::findClosestIntersection(const Ray& ray) const {
 glm::vec3 Scene::calculateLighting(const glm::vec3& point, const glm::vec3& normal, const Material& material) const {
     glm::vec3 totalLight(0.0f);
     
-    // Add ambient light
+    // Add ambient light (this is not affected by shadows)
     totalLight += material.ambient * material.color;
 
     // Add contribution from each light
     for (const auto& light : lights) {
         glm::vec3 lightDir = glm::normalize(light->getPosition() - point);
+        float lightDistance = glm::length(light->getPosition() - point);
         
-        // Calculate diffuse lighting
-        float diff = glm::max(glm::dot(normal, lightDir), 0.0f);
-        glm::vec3 diffuse = material.diffuse * diff * material.color * light->getColor();
+        // Cast shadow ray
+        Ray shadowRay(point + normal * 0.001f, lightDir);  // Small offset to prevent self-intersection
+        Intersection shadowIntersection = findClosestIntersection(shadowRay);
         
-        // Calculate specular lighting
-        glm::vec3 viewDir = glm::normalize(camera.getPosition() - point);
-        glm::vec3 reflectDir = glm::reflect(-lightDir, normal);
-        float spec = pow(glm::max(glm::dot(viewDir, reflectDir), 0.0f), material.shininess);
-        glm::vec3 specular = material.specular * spec * light->getColor() * material.color;
-        
-        // Add light contribution with attenuation
-        float distance = glm::length(light->getPosition() - point);
-        // TODO research attenuation formula
-        float attenuation = 1.0f / (1.0f + 0.09f * distance + 0.032f * distance * distance);
-        
-        totalLight += (diffuse + specular) * light->getIntensity() * attenuation;
+        // Check if something is blocking the light
+        // Only apply lighting if there's no intersection or the intersection is further than the light
+        if (!shadowIntersection.hit || shadowIntersection.distance > lightDistance) {
+            // Calculate diffuse lighting
+            float diff = glm::max(glm::dot(normal, lightDir), 0.0f);
+            glm::vec3 diffuse = material.diffuse * diff * material.color * light->getColor();
+            
+            // Calculate specular lighting
+            glm::vec3 viewDir = glm::normalize(camera.getPosition() - point);
+            glm::vec3 reflectDir = glm::reflect(-lightDir, normal);
+            float spec = pow(glm::max(glm::dot(viewDir, reflectDir), 0.0f), material.shininess);
+            glm::vec3 specular = material.specular * spec * light->getColor() * material.color;
+            
+            // Add light contribution with attenuation
+            float attenuation = 1.0f / (1.0f + 0.09f * lightDistance + 0.032f * lightDistance * lightDistance);
+            totalLight += (diffuse + specular) * light->getIntensity() * attenuation;
+        }
     }
 
     // Clamp values to [0,1]
