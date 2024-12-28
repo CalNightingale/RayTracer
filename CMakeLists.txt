@@ -8,8 +8,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Find required packages
 find_package(PNG REQUIRED)
 find_package(GLM REQUIRED)
-find_package(OpenGL REQUIRED)
-find_package(glfw3 REQUIRED)
 
 # Include directories
 include_directories(${PNG_INCLUDE_DIR})
@@ -26,6 +24,4 @@ add_executable(raytracer
 # Link libraries
 target_link_libraries(raytracer 
     ${PNG_LIBRARY}
-    glfw
-    OpenGL::GL
 )

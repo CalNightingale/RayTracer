@@ -12,17 +12,15 @@ private:
     std::vector<std::shared_ptr<Shape>> shapes;
     std::vector<std::shared_ptr<Light>> lights;
     std::vector<unsigned char> frameBuffer;
-    unsigned int textureId;
     int width;
     int height;
     static const int MAX_REFLECTION_DEPTH = 3;
     
-    // New private method for recursive ray color calculation
+    // Private method for recursive ray color calculation
     glm::vec3 traceRay(const Ray& ray, int depth) const;
 
 public:
     Scene(const Camera& cam = Camera());
-    ~Scene();
 
     void addShape(std::shared_ptr<Shape> shape) {
         shapes.push_back(shape);
@@ -41,14 +39,8 @@ public:
     // Finds the closest intersection with any shape for a given ray
     Intersection findClosestIntersection(const Ray& ray) const;
 
-    // Renders the scene to the framebuffer
-    void render(int width, int height);
-    
-    // Updates the OpenGL texture with the current framebuffer
-    void updateTexture();
-
-    // Initializes OpenGL resources
-    void initializeGL(int width, int height);
+    // Renders the scene to a PNG file
+    bool renderToPNG(const char* filename, int width, int height);
 
     // Calculate total lighting at a point
     glm::vec3 calculateLighting(const glm::vec3& point, const glm::vec3& normal, const Material& material) const;

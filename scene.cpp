@@ -8,73 +8,8 @@
     #include <GL/gl.h>
 #endif
 
-Scene::Scene(const Camera& cam) : camera(cam), textureId(0) {}
+Scene::Scene(const Camera& cam) : camera(cam) {}
 
-Scene::~Scene() {
-    if (textureId != 0) {
-        glDeleteTextures(1, &textureId);
-    }
-}
-
-void Scene::initializeGL(int w, int h) {
-    // Store dimensions
-    width = w;
-    height = h;
-
-    // Initialize framebuffer with the correct size
-    frameBuffer.resize(width * height * 3);
-
-    // Generate and bind texture
-    glGenTextures(1, &textureId);
-    glBindTexture(GL_TEXTURE_2D, textureId);
-    
-    // Set texture parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    
-    // Initialize empty texture
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-}
-
-void Scene::render(int width, int height) {
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            float u = float(x) / float(width);
-            float v = float(y) / float(height);
-            
-            Ray ray = camera.getRay(u, v);
-            glm::vec3 color = traceRay(ray, 0);
-            
-            // Convert color to unsigned char (0-255 range)
-            int pixel_index = (y * width + x) * 3;
-            frameBuffer[pixel_index] = static_cast<unsigned char>(color.r * 255.0f);
-            frameBuffer[pixel_index + 1] = static_cast<unsigned char>(color.g * 255.0f);
-            frameBuffer[pixel_index + 2] = static_cast<unsigned char>(color.b * 255.0f);
-        }
-    }
-}
-
-void Scene::updateTexture() {
-    glClear(GL_COLOR_BUFFER_BIT);
-    
-    // Update texture with new framebuffer data
-    glBindTexture(GL_TEXTURE_2D, textureId);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 
-                   frameBuffer.size() / 3 / height, height,
-                   GL_RGB, GL_UNSIGNED_BYTE, frameBuffer.data());
-
-    // Draw fullscreen quad
-    glEnable(GL_TEXTURE_2D);
-    glBegin(GL_QUADS);
-    glTexCoord2f(0.0f, 1.0f); glVertex2f(-1.0f, -1.0f);
-    glTexCoord2f(1.0f, 1.0f); glVertex2f(1.0f, -1.0f);
-    glTexCoord2f(1.0f, 0.0f); glVertex2f(1.0f, 1.0f);
-    glTexCoord2f(0.0f, 0.0f); glVertex2f(-1.0f, 1.0f);
-    glEnd();
-    glDisable(GL_TEXTURE_2D);
-}
 
 Intersection Scene::findClosestIntersection(const Ray& ray) const {
     Intersection closest;
@@ -107,7 +42,6 @@ glm::vec3 Scene::calculateLighting(const glm::vec3& point, const glm::vec3& norm
         Intersection shadowIntersection = findClosestIntersection(shadowRay);
         
         // Check if something is blocking the light
-        // Only apply lighting if there's no intersection or the intersection is further than the light
         if (!shadowIntersection.hit || shadowIntersection.distance > lightDistance) {
             // Calculate diffuse lighting
             float diff = glm::max(glm::dot(normal, lightDir), 0.0f);
@@ -146,7 +80,7 @@ glm::vec3 Scene::traceRay(const Ray& ray, int depth) const {
     // Handle reflections
     if (intersection.material.reflectiveness > 0.0f) {
         glm::vec3 reflectionDir = glm::reflect(ray.getDirection(), intersection.normal);
-        Ray reflectionRay(hitPoint + intersection.normal * 0.001f, reflectionDir);  // Small offset to prevent self-intersection
+        Ray reflectionRay(hitPoint + intersection.normal * 0.001f, reflectionDir);
         
         glm::vec3 reflectionColor = traceRay(reflectionRay, depth + 1);
         
@@ -155,4 +89,26 @@ glm::vec3 Scene::traceRay(const Ray& ray, int depth) const {
     }
     
     return baseColor;
+}
+
+bool Scene::renderToPNG(const char* filename, int width, int height) {
+    std::vector<unsigned char> frameBuffer(width * height * 3);
+
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            float u = float(x) / float(width);
+            float v = float(y) / float(height);
+            
+            Ray ray = camera.getRay(u, v);
+            glm::vec3 color = traceRay(ray, 0);
+            
+            // Convert color to unsigned char (0-255 range)
+            int pixel_index = (y * width + x) * 3;
+            frameBuffer[pixel_index] = static_cast<unsigned char>(color.r * 255.0f);
+            frameBuffer[pixel_index + 1] = static_cast<unsigned char>(color.g * 255.0f);
+            frameBuffer[pixel_index + 2] = static_cast<unsigned char>(color.b * 255.0f);
+        }
+    }
+
+    return write_png(filename, width, height, frameBuffer);
 }
