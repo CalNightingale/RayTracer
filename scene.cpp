@@ -29,37 +29,41 @@ Intersection Scene::findClosestIntersection(const Ray& ray) const {
 glm::vec3 Scene::calculateLighting(const glm::vec3& point, const glm::vec3& normal, const Material& material) const {
     glm::vec3 totalLight(0.0f);
     
-    // Add ambient light (this is not affected by shadows)
-    totalLight += material.ambient * material.color;
+    // Global ambient light (you might want to make this configurable)
+    glm::vec3 globalAmbient(0.1f);
+    totalLight += globalAmbient * material.ambient * material.color;
 
     // Add contribution from each light
     for (const auto& light : lights) {
+        // Calculate light direction and distance
         glm::vec3 lightDir = glm::normalize(light->getPosition() - point);
         float lightDistance = glm::length(light->getPosition() - point);
         
         // Cast shadow ray
-        Ray shadowRay(point + normal * 0.001f, lightDir);  // Small offset to prevent self-intersection
+        Ray shadowRay(point + normal * 0.001f, lightDir);
         Intersection shadowIntersection = findClosestIntersection(shadowRay);
         
-        // Check if something is blocking the light
+        // Check if point is in shadow
         if (!shadowIntersection.hit || shadowIntersection.distance > lightDistance) {
-            // Calculate diffuse lighting
+            // Diffuse term (Lambert's law)
             float diff = glm::max(glm::dot(normal, lightDir), 0.0f);
             glm::vec3 diffuse = material.diffuse * diff * material.color * light->getColor();
             
-            // Calculate specular lighting
+            // Specular term (Phong reflection)
             glm::vec3 viewDir = glm::normalize(camera.getPosition() - point);
             glm::vec3 reflectDir = glm::reflect(-lightDir, normal);
             float spec = pow(glm::max(glm::dot(viewDir, reflectDir), 0.0f), material.shininess);
-            glm::vec3 specular = material.specular * spec * light->getColor() * material.color;
+            glm::vec3 specular = material.specular * spec * light->getColor();
             
-            // Add light contribution with attenuation
+            // Light attenuation (inverse square law with smoothing)
             float attenuation = 1.0f / (1.0f + 0.09f * lightDistance + 0.032f * lightDistance * lightDistance);
+            
+            // Add light contribution
             totalLight += (diffuse + specular) * light->getIntensity() * attenuation;
         }
     }
 
-    // Clamp values to [0,1]
+    // Clamp final color to prevent overflow
     return glm::clamp(totalLight, 0.0f, 1.0f);
 }
 
