@@ -7,6 +7,7 @@
 #else
     #include <GL/gl.h>
 #endif
+#include "utils/progress_bar.h"
 
 Scene::Scene(const Camera& cam) : camera(cam) {}
 
@@ -97,6 +98,7 @@ glm::vec3 Scene::traceRay(const Ray& ray, int depth) const {
 
 bool Scene::renderToPNG(const char* filename, int width, int height) {
     std::vector<unsigned char> frameBuffer(width * height * 3);
+    ProgressBar progress(height);  // Create progress bar for number of rows
 
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
@@ -112,6 +114,7 @@ bool Scene::renderToPNG(const char* filename, int width, int height) {
             frameBuffer[pixel_index + 1] = static_cast<unsigned char>(color.g * 255.0f);
             frameBuffer[pixel_index + 2] = static_cast<unsigned char>(color.b * 255.0f);
         }
+        progress.update(y + 1);  // Update progress after each row
     }
 
     return write_png(filename, width, height, frameBuffer);
